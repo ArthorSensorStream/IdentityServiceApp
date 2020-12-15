@@ -8,5 +8,11 @@ namespace IdentityServiceApp.Repository
     {
         IdentityItem GetItem(Guid id);
         IEnumerable<IdentityItem> GetItems();
+
+        void CreateItem(IdentityItem item);
+
+        void UpdateItem(IdentityItem item);
+
+        void DeleteItem(Guid id);
     }
 }
