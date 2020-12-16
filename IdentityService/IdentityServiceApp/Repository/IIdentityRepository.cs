@@ -11,7 +11,7 @@ namespace IdentityServiceApp.Repository
 
         void CreateItem(IdentityItem item);
 
-        void UpdateItem(IdentityItem item);
+        void UpdateItem(IdentityItem updatedItem);
 
         void DeleteItem(Guid id);
     }

@@ -29,10 +29,10 @@ namespace IdentityServiceApp.Repository
             _items.Add(item);
         }
 
-        public void UpdateItem(IdentityItem item)
+        public void UpdateItem(IdentityItem updatedItem)
         {
-            var index = _items.FindIndex(existingItem => existingItem.Id == item.Id);
-            _items[index] = item;
+            var index = _items.FindIndex(existingItem => existingItem.Id == updatedItem.Id);
+            _items[index] = updatedItem;
         }
 
         public void DeleteItem(Guid id)
