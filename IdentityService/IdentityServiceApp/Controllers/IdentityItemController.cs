@@ -45,5 +45,48 @@ namespace IdentityServiceApp.Controllers
 
             return Ok(item.AsDto());
         }
+
+        // POST/items
+        [HttpPost]
+        public ActionResult<IdentityItemDto> CreateIdentity(CreateIdentityItemDto itemDto)
+        {
+            var item = new IdentityItem()
+            {
+                Id = Guid.NewGuid(),
+                Name = itemDto.Name,
+                CreatedDate = DateTimeOffset.UtcNow
+            };
+
+            _repository.CreateItem(item);
+            
+            return CreatedAtAction(nameof(GetItem), new {id = item.Id}, item.AsDto());
+        }
+
+        // PUT/items/{id}
+        [HttpPut("{id}")]
+        public ActionResult UpdateIdentity(Guid id, UpdateIdentityDto itemDto)
+        {
+            var existingItem = _repository.GetItem(id);
+            if (existingItem is null) return NotFound();
+
+            var updatedItem = existingItem with
+            {
+                Name = itemDto.Name
+            };
+            
+            _repository.UpdateItem(updatedItem);
+            return NoContent();
+        }
+        
+        //DELETE/items/{id}
+        [HttpDelete("{id}")]
+        public ActionResult DeleteItem(Guid id)
+        {
+            var existingItem = _repository.GetItem(id);
+            if (existingItem is null) return NotFound();
+            
+            _repository.DeleteItem(id);
+            return NoContent();
+        }
     }
 }
