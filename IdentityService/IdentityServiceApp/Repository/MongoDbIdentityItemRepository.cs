@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using IdentityServiceApp.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -20,32 +21,32 @@ namespace IdentityServiceApp.Repository
             _filterDefinitionBuilder = Builders<IdentityItem>.Filter;
         }
 
-        public void CreateItem(IdentityItem item)
+        public async Task CreateItemAsync(IdentityItem item)
         {
-            _identityItemsCollection.InsertOne(item);
+            await _identityItemsCollection.InsertOneAsync(item);
         }
 
-        public void UpdateItem(IdentityItem updatedItem)
+        public async Task UpdateItemAsync(IdentityItem updatedItem)
         {
             var filter = _filterDefinitionBuilder.Eq(existingItem => existingItem.Id, updatedItem.Id);
-            _identityItemsCollection.ReplaceOne(filter, updatedItem);
+            await _identityItemsCollection.ReplaceOneAsync(filter, updatedItem);
         }
 
-        public IdentityItem GetItem(Guid id)
+        public async Task<IdentityItem> GetItemAsync(Guid id)
         {
             var filter = _filterDefinitionBuilder.Eq(item => item.Id, id);
-            return _identityItemsCollection.Find(filter).SingleOrDefault();
+            return await _identityItemsCollection.Find(filter).SingleOrDefaultAsync();
         }
 
-        public IEnumerable<IdentityItem> GetItems()
+        public async Task<IEnumerable<IdentityItem>> GetItemsAsync()
         {
-            return _identityItemsCollection.Find(new BsonDocument()).ToList();
+            return await _identityItemsCollection.Find(new BsonDocument()).ToListAsync();
         }
 
-        public void DeleteItem(Guid id)
+        public async Task DeleteItemAsync(Guid id)
         {
             var filter = _filterDefinitionBuilder.Eq(item => item.Id, id);
-            _identityItemsCollection.DeleteOne(filter);
+            await _identityItemsCollection.DeleteOneAsync(filter);
         }
     }
 }

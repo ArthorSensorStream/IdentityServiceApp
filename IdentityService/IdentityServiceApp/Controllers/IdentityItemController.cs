@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using IdentityServiceApp.DTOs;
 using IdentityServiceApp.Models;
 using IdentityServiceApp.Repository;
@@ -14,7 +15,6 @@ namespace IdentityServiceApp.Controllers
     [Route("[controller]")]
     public class IdentityItemController : ControllerBase
     {
-
         private readonly ILogger<IdentityItemController> _logger;
         private readonly IIdentityRepository _repository;
 
@@ -30,16 +30,18 @@ namespace IdentityServiceApp.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<IdentityItemDto> Get()
+        public async Task<IEnumerable<IdentityItemDto>> GetItemsAsync()
         {
-            return _repository.GetItems().Select(item => item.AsDto());
+            var items = (await _repository.GetItemsAsync())
+                .Select(item => item.AsDto());
+            return items;
         }
 
         //GET/Item/{id}
         [HttpGet("{id}")]
-        public ActionResult<IdentityItemDto> GetItem(Guid id)
+        public async Task<ActionResult<IdentityItemDto>> GetItemAsync(Guid id)
         {
-            var item = _repository.GetItem(id);
+            var item = await _repository.GetItemAsync(id);
 
             if (item is null) return NotFound();
 
@@ -48,7 +50,7 @@ namespace IdentityServiceApp.Controllers
 
         // POST/items
         [HttpPost]
-        public ActionResult<IdentityItemDto> CreateIdentity(CreateIdentityItemDto itemDto)
+        public async Task<ActionResult<IdentityItemDto>> CreateIdentityAsync(CreateIdentityItemDto itemDto)
         {
             var item = new IdentityItem()
             {
@@ -57,35 +59,37 @@ namespace IdentityServiceApp.Controllers
                 CreatedDate = DateTimeOffset.UtcNow
             };
 
-            _repository.CreateItem(item);
-            
-            return CreatedAtAction(nameof(GetItem), new {id = item.Id}, item.AsDto());
+            await _repository.CreateItemAsync(item);
+
+            string actionName = nameof(GetItemAsync);
+
+            return CreatedAtAction(actionName, new {id = item.Id}, item.AsDto());
         }
 
         // PUT/items/{id}
         [HttpPut("{id}")]
-        public ActionResult UpdateIdentity(Guid id, UpdateIdentityDto itemDto)
+        public async Task<ActionResult> UpdateIdentityAsync(Guid id, UpdateIdentityDto itemDto)
         {
-            var existingItem = _repository.GetItem(id);
+            var existingItem = await _repository.GetItemAsync(id);
             if (existingItem is null) return NotFound();
 
             var updatedItem = existingItem with
             {
                 Name = itemDto.Name
             };
-            
-            _repository.UpdateItem(updatedItem);
+
+            await _repository.UpdateItemAsync(updatedItem);
             return NoContent();
         }
-        
+
         //DELETE/items/{id}
         [HttpDelete("{id}")]
-        public ActionResult DeleteItem(Guid id)
+        public async Task<ActionResult> DeleteItem(Guid id)
         {
-            var existingItem = _repository.GetItem(id);
+            var existingItem = await _repository.GetItemAsync(id);
             if (existingItem is null) return NotFound();
-            
-            _repository.DeleteItem(id);
+
+            await _repository.DeleteItemAsync(id);
             return NoContent();
         }
     }

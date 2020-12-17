@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using IdentityServiceApp.Models;
 
 namespace IdentityServiceApp.Repository
 {
     public interface IIdentityRepository
     {
-        IdentityItem GetItem(Guid id);
-        IEnumerable<IdentityItem> GetItems();
+        Task<IdentityItem> GetItemAsync(Guid id);
+        Task<IEnumerable<IdentityItem>> GetItemsAsync();
 
-        void CreateItem(IdentityItem item);
+        Task CreateItemAsync(IdentityItem item);
 
-        void UpdateItem(IdentityItem updatedItem);
+        Task UpdateItemAsync(IdentityItem updatedItem);
 
-        void DeleteItem(Guid id);
+        Task DeleteItemAsync(Guid id);
     }
 }

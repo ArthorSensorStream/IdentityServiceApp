@@ -37,7 +37,10 @@ namespace IdentityServiceApp
             });
             
             services.AddSingleton<IIdentityRepository, MongoDbIdentityItemRepository>();
-            services.AddControllers();
+            
+            // Dont remove Async suffix from Controller names
+            services.AddControllers(options=> options.SuppressAsyncSuffixInActionNames = false);
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "IdentityServiceApp", Version = "v1" });
