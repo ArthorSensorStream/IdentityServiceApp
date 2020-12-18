@@ -1,3 +1,4 @@
+using System;
 using IdentityServiceApp.Repository;
 using IdentityServiceApp.Settings;
 using Microsoft.AspNetCore.Builder;
@@ -29,11 +30,13 @@ namespace IdentityServiceApp
             // anytime there is a guid, it serializes it as a string
             BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
             BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String));
-            
+
+            var mongoDbSettings = Configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
+
             services.AddSingleton<IMongoClient>(serviceProvider =>
             {
-                var settings = Configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
-                return new MongoClient(settings.ConnectionString);
+                
+                return new MongoClient(mongoDbSettings.ConnectionString);
             });
             
             services.AddSingleton<IIdentityRepository, MongoDbIdentityItemRepository>();
@@ -46,7 +49,8 @@ namespace IdentityServiceApp
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "IdentityServiceApp", Version = "v1" });
             });
 
-            services.AddHealthChecks();
+            services.AddHealthChecks()
+                .AddMongoDb(mongoDbSettings.ConnectionString, name: "MongoDb", timeout: TimeSpan.FromSeconds(3));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
