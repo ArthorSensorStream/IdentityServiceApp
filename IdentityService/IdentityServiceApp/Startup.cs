@@ -1,8 +1,15 @@
 using System;
+using System.Linq;
+using System.Net.Mime;
+using System.Text.Json;
 using IdentityServiceApp.Repository;
 using IdentityServiceApp.Settings;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -33,11 +40,7 @@ namespace IdentityServiceApp
 
             var mongoDbSettings = Configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
 
-            services.AddSingleton<IMongoClient>(serviceProvider =>
-            {
-                
-                return new MongoClient(mongoDbSettings.ConnectionString);
-            });
+            services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoDbSettings.ConnectionString));
             
             services.AddSingleton<IIdentityRepository, MongoDbIdentityItemRepository>();
             
@@ -50,7 +53,11 @@ namespace IdentityServiceApp
             });
 
             services.AddHealthChecks()
-                .AddMongoDb(mongoDbSettings.ConnectionString, name: "MongoDb", timeout: TimeSpan.FromSeconds(3));
+                .AddMongoDb(
+                    mongoDbSettings.ConnectionString,
+                    name: "MongoDb",
+                    timeout: TimeSpan.FromSeconds(3),
+                    tags: new[] {"ready"});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,7 +79,36 @@ namespace IdentityServiceApp
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHealthChecks("/health");
+                AddHealthChecks(endpoints);
+            });
+        }
+
+        private static void AddHealthChecks(IEndpointRouteBuilder endpoints)
+        {
+            endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+            {
+                // only include those health checks that was tagged "ready"
+                Predicate = (check) => check.Tags.Contains("ready"),
+                ResponseWriter = async (context, report) =>
+                {
+                    var result = JsonSerializer.Serialize(new
+                    {
+                        status = report.Status.ToString(),
+                        check = report.Entries.Select(entry => new
+                        {
+                            name = entry.Key,
+                            staus = entry.Value.Status.ToString(),
+                            exception = entry.Value.Exception != null ? entry.Value.Exception.Message : "None",
+                            duration = entry.Value.Duration.ToString()
+                        })
+                    });
+                    context.Response.ContentType = MediaTypeNames.Application.Json;
+                    await context.Response.WriteAsync(result);
+                }
+            });
+            endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
+            {
+                Predicate = _ => false
             });
         }
     }
