@@ -2,13 +2,13 @@ using System;
 using System.Linq;
 using System.Net.Mime;
 using System.Text.Json;
+using AutoMapper;
 using IdentityServiceApp.Repository;
 using IdentityServiceApp.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +43,8 @@ namespace IdentityServiceApp
             services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoDbSettings.ConnectionString));
             
             services.AddSingleton<IIdentityRepository, MongoDbIdentityItemRepository>();
+
+            services.AddAutoMapper(typeof(Startup));
             
             // Dont remove Async suffix from Controller names
             services.AddControllers(options=> options.SuppressAsyncSuffixInActionNames = false);
